@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "NFC .js",
-  "scripts": {
+"scripts": {
   "start": "npx serve ."
-
-  },
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
