@@ -135,7 +135,22 @@ function App() {
     return { subjectStats, teacherStats, searchResults };
   };
 
-  if (!scanResult) return <div style={styles.viewPort}><h2>ID Required</h2></div>;
+  // --- IMPROVED LANDING / TAP ID PAGE ---
+  if (!scanResult) {
+    return (
+      <div style={styles.viewPort}>
+        <div style={{...styles.container, justifyContent: 'center', alignItems: 'center', padding: '40px', textAlign: 'center'}}>
+           <div style={styles.scanIconContainer}>
+              <div style={styles.pulseRing}></div>
+              <span style={{fontSize: '50px'}}>🪪</span>
+           </div>
+           <h2 style={{color: '#1e3a8a', fontSize: '24px', fontWeight: '800', marginBottom: '10px'}}>Ready to Scan</h2>
+           <p style={{color: '#64748b', fontSize: '15px', lineHeight: '1.5'}}>Please tap your ID card to access your academic logs and reminders.</p>
+           <div style={{marginTop: '40px', fontSize: '12px', color: '#cbd5e1', fontWeight: 'bold', letterSpacing: '1.5px'}}>AWAITING AUTHENTICATION</div>
+        </div>
+      </div>
+    );
+  }
 
   if (view === "home") {
     const { subjectStats, teacherStats, searchResults } = getAnalyticsAndSearch();
@@ -263,19 +278,28 @@ function App() {
           {!isToday && <div style={styles.archiveBanner}>🕒 Archive: {selectedDate}</div>}
           <section style={styles.section}>
             <p style={styles.sectionLabel}>TIMELINE</p>
-            {academicLogs.map(log => (
-              <div key={log.id} style={styles.logCard}>
-                <div style={styles.logSide}>P{log.period}</div>
-                <div style={styles.logMain}>
-                  <div style={styles.logHeader}><span style={styles.logSubject}>{log.subject}</span>{isToday && <button onClick={() => setAcademicLogs(academicLogs.filter(l => l.id !== log.id))} style={styles.del}>✕</button>}</div>
-                  <p style={styles.logTeacher}>{log.teacher}</p>
-                  {log.note && <p style={styles.logNote}>{log.note}</p>}
+            {academicLogs.length === 0 ? <p style={styles.empty}>No logs for this date.</p> : 
+              academicLogs.map(log => (
+                <div key={log.id} style={styles.logCard}>
+                  <div style={styles.logSide}>P{log.period}</div>
+                  <div style={styles.logMain}>
+                    <div style={styles.logHeader}><span style={styles.logSubject}>{log.subject}</span>{isToday && <button onClick={() => setAcademicLogs(academicLogs.filter(l => l.id !== log.id))} style={styles.del}>✕</button>}</div>
+                    <p style={styles.logTeacher}>{log.teacher}</p>
+                    {log.note && <p style={styles.logNote}>{log.note}</p>}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            }
           </section>
         </div>
       </div>
+      <style>{`
+        @keyframes pulse {
+          0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(30, 58, 138, 0.4); }
+          70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(30, 58, 138, 0); }
+          100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(30, 58, 138, 0); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -283,6 +307,8 @@ function App() {
 const styles = {
   viewPort: { width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', backgroundColor: '#f0f4f8', position: 'fixed', top: 0, left: 0, fontFamily: 'Inter, sans-serif' },
   container: { width: '100%', maxWidth: '420px', backgroundColor: '#fff', display: 'flex', flexDirection: 'column' },
+  scanIconContainer: { position: 'relative', width: '100px', height: '100px', backgroundColor: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '30px' },
+  pulseRing: { position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', animation: 'pulse 2s infinite' },
   header: { padding: '40px 25px 30px 25px', backgroundColor: '#1e3a8a', color: '#fff', borderBottomLeftRadius: '35px', borderBottomRightRadius: '35px' },
   topInfo: { textAlign: 'left' },
   greetingText: { fontSize: '14px', opacity: 0.8, margin: 0 },
@@ -290,7 +316,7 @@ const styles = {
   backIconBtn: { background: 'rgba(255,255,255,0.2)', border: 'none', padding: '10px', borderRadius: '12px', fontSize: '20px', cursor: 'pointer' },
   backBtn: { background: 'none', border: 'none', color: '#fff', fontSize: '24px', cursor: 'pointer', transform: 'rotate(180deg)' },
   searchBoxContainer: { position: 'relative', marginTop: '10px' },
-  searchInput: { width: '100%', padding: '12px 40px 12px 15px', borderRadius: '10px', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#1a202c', fontSize: '14px', outline: 'none', boxSizing: 'border-box' },
+  searchInput: { width: '100%', padding: '12px 40px 12px 15px', borderRadius: '12px', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#1a202c', fontSize: '14px', outline: 'none', boxSizing: 'border-box' },
   clearSearch: { position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' },
   graphTrack: { width: '100%', height: '10px', backgroundColor: '#e2e8f0', borderRadius: '10px', overflow: 'hidden' },
   graphFill: { height: '100%', backgroundColor: '#1e3a8a', borderRadius: '10px' },
