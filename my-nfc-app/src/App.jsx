@@ -1,167 +1,212 @@
 import React, { useState, useEffect } from 'react';
 
-const GUEST_DATABASE = {
-  "321": { 
-    name: "Joyal Jose", 
-    classNo: "233734", 
-    college: "Kuriakose Elias College",
-    department: "Computer Science",
-    validUntil: "2027",
-    color: "#800000" // College Maroon
-  },
-  "654": { 
-    name: "Aibal Jose", 
-    classNo: "233735", 
-    college: "Kuriakose Elias College",
-    department: "Physics",
-    validUntil: "2027",
-    color: "#003366" 
-  }
+// Your Specific College Data
+const SUBJECT_MAP = {
+  "AB": ["Fr. Dr. Johnson Joseph", "Julia Macholil"],
+  "OB": ["Karthika Elizabeth", "Anjitha"],
+  "CD": ["Chinchu Rani Vincent", "Haritha"],
+  "Counselling": ["Jishnu"]
 };
+
+const SUBJECT_LIST = Object.keys(SUBJECT_MAP);
 
 function App() {
   const [scanResult, setScanResult] = useState(null);
-  const [todos, setTodos] = useState([]);
-  const [inputValue, setInputValue] = useState('');
+  const [academicLogs, setAcademicLogs] = useState([]);
+  const [reminders, setReminders] = useState([]);
+  
+  // Form States
+  const [period, setPeriod] = useState("1");
+  const [subject, setSubject] = useState(SUBJECT_LIST[0]);
+  const [teacher, setTeacher] = useState(SUBJECT_MAP[SUBJECT_LIST[0]][0]);
+  const [note, setNote] = useState("");
+  const [reminderInput, setReminderInput] = useState("");
+
+  // Update teacher list when subject changes
+  useEffect(() => {
+    setTeacher(SUBJECT_MAP[subject][0]);
+  }, [subject]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const idFromUrl = params.get('id');
-    if (idFromUrl && GUEST_DATABASE[idFromUrl]) {
-      setScanResult({ id: idFromUrl, ...GUEST_DATABASE[idFromUrl] });
+    const id = params.get('id');
+    if (id === "321") {
+      setScanResult({ id, name: "Joyal Jose", college: "Kuriakose Elias College" });
     }
   }, []);
 
   useEffect(() => {
     if (scanResult) {
-      const savedData = localStorage.getItem(`logs_${scanResult.id}`);
-      setTodos(savedData ? JSON.parse(savedData) : []);
+      const savedLogs = localStorage.getItem(`academic_logs_${scanResult.id}`);
+      const savedRem = localStorage.getItem(`academic_rem_${scanResult.id}`);
+      if (savedLogs) setAcademicLogs(JSON.parse(savedLogs));
+      if (savedRem) setReminders(JSON.parse(savedRem));
     }
   }, [scanResult]);
 
   useEffect(() => {
     if (scanResult) {
-      localStorage.setItem(`logs_${scanResult.id}`, JSON.stringify(todos));
+      localStorage.setItem(`academic_logs_${scanResult.id}`, JSON.stringify(academicLogs));
+      localStorage.setItem(`academic_rem_${scanResult.id}`, JSON.stringify(reminders));
     }
-  }, [todos, scanResult]);
+  }, [academicLogs, reminders, scanResult]);
 
-  const addEntry = (e) => {
+  const handleAddLog = (e) => {
     e.preventDefault();
-    if (!inputValue.trim()) return;
-    if (navigator.vibrate) navigator.vibrate(40);
-
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const newEntry = { text: inputValue, id: Date.now(), time: time };
-    setTodos([newEntry, ...todos]);
-    setInputValue('');
+    const newLog = {
+      id: Date.now(),
+      period,
+      subject,
+      teacher,
+      note,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    setAcademicLogs([newLog, ...academicLogs]);
+    setNote("");
+    if (navigator.vibrate) navigator.vibrate(50);
   };
 
-  const deleteEntry = (id) => setTodos(todos.filter(t => t.id !== id));
+  if (!scanResult) return (
+    <div style={styles.viewPort}>
+      <div style={styles.loginCard}>
+        <div style={styles.nfcIcon}>🪪</div>
+        <h2 style={{color: '#1a1a1a'}}>KE College Tracker</h2>
+        <p style={{color: '#666'}}>Tap ID Card to Sync</p>
+      </div>
+    </div>
+  );
 
   return (
     <div style={styles.viewPort}>
       <div style={styles.container}>
-        {!scanResult ? (
-          <div style={styles.emptyState}>
-            <div style={styles.collegeLogoPlaceholder}>KE</div>
-            <h2 style={styles.mainTitle}>KE College Security</h2>
-            <p style={styles.subTitle}>Scan ID Card to Verify Access</p>
-          </div>
-        ) : (
-          <div style={styles.wrapper}>
-            {/* Academic ID Header */}
-            <header style={{...styles.header, backgroundColor: scanResult.color}}>
-              <p style={styles.collegeName}>{scanResult.college.toUpperCase()}</p>
-              <div style={styles.idCardContent}>
-                <div style={styles.avatarLarge}>👤</div>
-                <div style={styles.idInfo}>
-                  <h1 style={styles.studentName}>{scanResult.name}</h1>
-                  <p style={styles.classText}>Class No: <b>{scanResult.classNo}</b></p>
-                  <p style={styles.deptText}>{scanResult.department}</p>
+        <header style={styles.header}>
+          <div style={styles.badge}>ACADEMIC LOG ACTIVE</div>
+          <h1 style={styles.studentName}>{scanResult.name}</h1>
+          <p style={styles.collegeName}>{scanResult.college}</p>
+        </header>
+
+        <div style={styles.scrollArea}>
+          {/* Period Tracker Form */}
+          <section style={styles.section}>
+            <p style={styles.sectionLabel}>CURRENT PERIOD UPDATE</p>
+            <div style={styles.formCard}>
+              <div style={styles.row}>
+                <div style={{flex: 1}}>
+                  <label style={styles.fieldLabel}>Period</label>
+                  <select style={styles.select} value={period} onChange={e => setPeriod(e.target.value)}>
+                    {[1,2,3,4,5,6,7].map(p => <option key={p} value={p}>Period {p}</option>)}
+                  </select>
+                </div>
+                <div style={{flex: 2}}>
+                  <label style={styles.fieldLabel}>Subject</label>
+                  <select style={styles.select} value={subject} onChange={e => setSubject(e.target.value)}>
+                    {SUBJECT_LIST.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
                 </div>
               </div>
-              <div style={styles.validBadge}>VALID UNTIL {scanResult.validUntil}</div>
-            </header>
 
-            {/* Security Log Section */}
-            <div style={styles.content}>
-               <p style={styles.label}>GATE ENTRY LOGS</p>
-               <form onSubmit={addEntry} style={styles.form}>
-                  <input 
-                    value={inputValue} 
-                    onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="Add entry note (e.g. Late Entry)..."
-                    style={styles.input}
-                  />
-                  <button type="submit" style={{...styles.addBtn, backgroundColor: scanResult.color}}>+</button>
-               </form>
+              <div style={{marginTop: '15px'}}>
+                <label style={styles.fieldLabel}>Teaching Faculty</label>
+                <select style={styles.select} value={teacher} onChange={e => setTeacher(e.target.value)}>
+                  {SUBJECT_MAP[subject].map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
 
-               <div style={styles.list}>
-                  {todos.map(todo => (
-                    <div key={todo.id} style={styles.todoItem}>
-                      <div style={{...styles.itemColorBar, backgroundColor: scanResult.color}}></div>
-                      <div style={styles.itemMain}>
-                        <span style={styles.itemText}>{todo.text}</span>
-                        <span style={styles.itemTime}>{todo.time}</span>
-                      </div>
-                      <button onClick={() => deleteEntry(todo.id)} style={styles.delBtn}>✕</button>
-                    </div>
-                  ))}
-                  {todos.length === 0 && <p style={styles.emptyMsg}>No recent logs found.</p>}
-               </div>
+              <textarea 
+                style={styles.textarea} 
+                placeholder="Key topics or class notes..." 
+                value={note}
+                onChange={e => setNote(e.target.value)}
+              />
+              <button onClick={handleAddLog} style={styles.mainBtn}>UPDATE LOG</button>
             </div>
+          </section>
 
-            <footer style={styles.footer}>
-                <button onClick={() => { setScanResult(null); window.history.pushState({}, '', '/'); }} style={styles.exitBtn}>
-                  CLOSE STUDENT PROFILE
-                </button>
-            </footer>
-          </div>
-        )}
+          {/* Quick Reminders */}
+          <section style={styles.section}>
+            <p style={styles.sectionLabel}>REMINDERS & TASKS</p>
+            <div style={styles.reminderInputGroup}>
+              <input 
+                style={styles.remInput} 
+                placeholder="Next test, assignment..." 
+                value={reminderInput}
+                onChange={e => setReminderInput(e.target.value)}
+              />
+              <button onClick={() => {
+                if(!reminderInput) return;
+                setReminders([...reminders, {id: Date.now(), text: reminderInput}]);
+                setReminderInput("");
+              }} style={styles.addBtn}>+</button>
+            </div>
+            {reminders.map(r => (
+              <div key={r.id} style={styles.reminderItem}>
+                <span style={{color: '#2c3e50'}}>📌 {r.text}</span>
+                <button style={styles.delBtn} onClick={() => setReminders(reminders.filter(i => i.id !== r.id))}>✕</button>
+              </div>
+            ))}
+          </section>
+
+          {/* Activity Timeline */}
+          <section style={styles.section}>
+            <p style={styles.sectionLabel}>TODAY'S TIMELINE</p>
+            {academicLogs.length === 0 && <p style={styles.emptyMsg}>No periods logged yet today.</p>}
+            {academicLogs.map(log => (
+              <div key={log.id} style={styles.logCard}>
+                <div style={styles.logSide}>P{log.period}</div>
+                <div style={styles.logMain}>
+                  <div style={styles.logHeader}>
+                    <span style={styles.logSubject}>{log.subject}</span>
+                    <span style={styles.logTime}>{log.time}</span>
+                  </div>
+                  <p style={styles.logTeacher}>by {log.teacher}</p>
+                  {log.note && <p style={styles.logNote}>{log.note}</p>}
+                </div>
+              </div>
+            ))}
+          </section>
+        </div>
       </div>
     </div>
   );
 }
 
 const styles = {
-  viewPort: { width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#f0f2f5', position: 'fixed', top: 0, left: 0, fontFamily: 'system-ui, -apple-system, sans-serif' },
-  container: { width: '100%', maxWidth: '420px', height: '100%', maxHeight: '850px', backgroundColor: '#fff', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 50px rgba(0,0,0,0.1)' },
+  viewPort: { width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', backgroundColor: '#eef2f3', position: 'fixed', top: 0, left: 0, fontFamily: 'system-ui, -apple-system, sans-serif' },
+  container: { width: '100%', maxWidth: '420px', backgroundColor: '#fff', display: 'flex', flexDirection: 'column', boxShadow: '0 10px 30px rgba(0,0,0,0.08)' },
+  loginCard: { textAlign: 'center', marginTop: '45%' },
+  nfcIcon: { fontSize: '60px', marginBottom: '10px' },
   
-  // Login Styles
-  emptyState: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' },
-  collegeLogoPlaceholder: { width: '100px', height: '100px', borderRadius: '50%', backgroundColor: '#800000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', fontWeight: 'bold', marginBottom: '20px', boxShadow: '0 8px 16px rgba(128,0,0,0.2)' },
-  mainTitle: { color: '#1a1a1a', marginBottom: '8px' },
-  subTitle: { color: '#666', fontSize: '14px' },
+  header: { padding: '35px 25px', backgroundColor: '#800000', color: '#fff', textAlign: 'left', borderBottomLeftRadius: '25px', borderBottomRightRadius: '25px' },
+  badge: { fontSize: '10px', fontWeight: 'bold', backgroundColor: 'rgba(255,255,255,0.15)', padding: '5px 10px', borderRadius: '6px', color: '#fff', letterSpacing: '1px' },
+  studentName: { fontSize: '26px', margin: '12px 0 4px 0', letterSpacing: '-0.5px' },
+  collegeName: { fontSize: '12px', opacity: 0.85, margin: 0, textTransform: 'uppercase' },
+  
+  scrollArea: { flex: 1, overflowY: 'auto', padding: '25px' },
+  section: { marginBottom: '35px' },
+  sectionLabel: { fontSize: '11px', fontWeight: 'bold', color: '#a0a0a0', letterSpacing: '1.2px', marginBottom: '15px' },
+  
+  fieldLabel: { fontSize: '12px', color: '#666', marginBottom: '6px', display: 'block', fontWeight: '500' },
+  formCard: { backgroundColor: '#fff', border: '1px solid #edf2f7', padding: '20px', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' },
+  row: { display: 'flex', gap: '12px' },
+  select: { width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', fontSize: '14px', outline: 'none', color: '#2d3748' },
+  textarea: { width: '100%', boxSizing: 'border-box', marginTop: '15px', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0', minHeight: '90px', fontFamily: 'inherit', fontSize: '14px', backgroundColor: '#f8fafc' },
+  mainBtn: { width: '100%', marginTop: '15px', padding: '15px', backgroundColor: '#800000', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: '700', cursor: 'pointer', fontSize: '14px' },
 
-  // ID View Styles
-  wrapper: { flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: '#f8f9fa' },
-  header: { padding: '30px 20px', color: '#fff', textAlign: 'center', borderBottomLeftRadius: '30px', borderBottomRightRadius: '30px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' },
-  collegeName: { fontSize: '12px', letterSpacing: '2px', fontWeight: '700', opacity: 0.9, marginBottom: '20px' },
-  idCardContent: { display: 'flex', alignItems: 'center', gap: '20px', textAlign: 'left', marginBottom: '20px' },
-  avatarLarge: { width: '80px', height: '80px', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px' },
-  idInfo: { flex: 1 },
-  studentName: { fontSize: '22px', margin: '0 0 4px 0', fontWeight: 'bold' },
-  classText: { fontSize: '14px', margin: 0, opacity: 0.9 },
-  deptText: { fontSize: '12px', margin: '4px 0 0 0', opacity: 0.8 },
-  validBadge: { display: 'inline-block', backgroundColor: 'rgba(255,255,255,0.2)', padding: '4px 12px', borderRadius: '20px', fontSize: '10px', fontWeight: 'bold' },
+  reminderInputGroup: { display: 'flex', gap: '10px', marginBottom: '15px' },
+  remInput: { flex: 1, padding: '14px', borderRadius: '10px', border: 'none', backgroundColor: '#f1f5f9', fontSize: '14px', outline: 'none' },
+  addBtn: { width: '50px', backgroundColor: '#2d3748', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '22px', cursor: 'pointer' },
+  reminderItem: { display: 'flex', justifyContent: 'space-between', padding: '15px', backgroundColor: '#fffdf2', borderRadius: '12px', borderLeft: '5px solid #ecc94b', marginBottom: '10px', fontSize: '14px', boxShadow: '0 2px 4px rgba(0,0,0,0.03)' },
+  delBtn: { background: 'none', border: 'none', color: '#cbd5e0', cursor: 'pointer', fontSize: '18px' },
 
-  content: { padding: '25px 20px', flex: 1, overflowY: 'auto' },
-  label: { fontSize: '11px', fontWeight: 'bold', color: '#888', marginBottom: '15px', letterSpacing: '1px' },
-  form: { display: 'flex', gap: '8px', marginBottom: '25px' },
-  input: { flex: 1, padding: '14px', borderRadius: '12px', border: '1px solid #ddd', fontSize: '14px', outline: 'none' },
-  addBtn: { width: '50px', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '24px', cursor: 'pointer' },
-
-  list: { display: 'flex', flexDirection: 'column', gap: '12px' },
-  todoItem: { display: 'flex', backgroundColor: '#fff', padding: '14px', borderRadius: '15px', alignItems: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' },
-  itemColorBar: { width: '4px', height: '35px', borderRadius: '2px', marginRight: '15px' },
-  itemMain: { flex: 1, display: 'flex', flexDirection: 'column' },
-  itemText: { fontSize: '15px', color: '#2c3e50', fontWeight: '500' },
-  itemTime: { fontSize: '10px', color: '#999', marginTop: '4px' },
-  delBtn: { background: 'none', border: 'none', color: '#ff4d4d', fontSize: '18px', cursor: 'pointer' },
-  emptyMsg: { textAlign: 'center', color: '#aaa', fontSize: '13px', marginTop: '30px' },
-
-  footer: { padding: '20px', borderTop: '1px solid #eee', backgroundColor: '#fff' },
-  exitBtn: { width: '100%', padding: '15px', background: 'none', border: '1px solid #ddd', borderRadius: '12px', color: '#666', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }
+  logCard: { display: 'flex', backgroundColor: '#fff', border: '1px solid #f1f5f9', borderRadius: '16px', overflow: 'hidden', marginBottom: '15px', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' },
+  logSide: { backgroundColor: '#f8fafc', padding: '18px', display: 'flex', alignItems: 'center', fontWeight: '800', borderRight: '1px solid #f1f5f9', color: '#800000', fontSize: '16px' },
+  logMain: { padding: '15px', flex: 1 },
+  logHeader: { display: 'flex', justifyContent: 'space-between', marginBottom: '5px', alignItems: 'center' },
+  logSubject: { fontWeight: '700', fontSize: '16px', color: '#1a202c' },
+  logTime: { fontSize: '11px', color: '#a0aec0', fontWeight: '500' },
+  logTeacher: { fontSize: '12px', color: '#718096', margin: 0, fontWeight: '500' },
+  logNote: { fontSize: '13px', color: '#4a5568', marginTop: '10px', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', lineHeight: '1.5', border: '1px dashed #e2e8f0' },
+  emptyMsg: { textAlign: 'center', color: '#cbd5e0', fontSize: '14px', marginTop: '20px' }
 };
 
 export default App;
