@@ -88,7 +88,6 @@ function App() {
     setReminderInput("");
   };
 
-  // --- NEW: TEXT HIGHLIGHTING HELPER ---
   const highlightText = (text, highlight) => {
     if (!highlight.trim()) return text;
     const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
@@ -109,7 +108,7 @@ function App() {
     
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key.startsWith(`logs_${scanResult.id}_`)) {
+      if (key && key.startsWith(`logs_${scanResult.id}_`)) {
         const logs = JSON.parse(localStorage.getItem(key));
         const logDate = key.split('_')[2];
         allLogs = [...allLogs, ...logs.map(l => ({...l, logDate}))];
@@ -197,7 +196,7 @@ function App() {
                     {teacherStats.map((t, i) => (
                       <div key={t.name} style={{display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < 2 ? '1px solid #f1f5f9' : 'none'}}>
                         <span style={{fontSize: '14px', color: '#1e293b'}}>{t.name}</span>
-                        <span style={{fontSize: '12px', fontWeight: 'bold'}}>{t.count} Classes</span>
+                        <span style={{fontSize: '12px', fontWeight: 'bold', color: '#1e3a8a'}}>{t.count} Classes</span>
                       </div>
                     ))}
                   </div>
@@ -291,8 +290,8 @@ const styles = {
   backIconBtn: { background: 'rgba(255,255,255,0.2)', border: 'none', padding: '10px', borderRadius: '12px', fontSize: '20px', cursor: 'pointer' },
   backBtn: { background: 'none', border: 'none', color: '#fff', fontSize: '24px', cursor: 'pointer', transform: 'rotate(180deg)' },
   searchBoxContainer: { position: 'relative', marginTop: '10px' },
-  searchInput: { width: '100%', padding: '12px 40px 12px 15px', borderRadius: '12px', border: 'none', backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: '14px', outline: 'none', boxSizing: 'border-box' },
-  clearSearch: { position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#fff', opacity: 0.6, cursor: 'pointer' },
+  searchInput: { width: '100%', padding: '12px 40px 12px 15px', borderRadius: '10px', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#1a202c', fontSize: '14px', outline: 'none', boxSizing: 'border-box' },
+  clearSearch: { position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' },
   graphTrack: { width: '100%', height: '10px', backgroundColor: '#e2e8f0', borderRadius: '10px', overflow: 'hidden' },
   graphFill: { height: '100%', backgroundColor: '#1e3a8a', borderRadius: '10px' },
   dateSelectorPill: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '50px', padding: '5px', marginTop: '20px' },
