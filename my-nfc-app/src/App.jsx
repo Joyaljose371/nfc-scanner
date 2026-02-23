@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 
-// Database matches the TEXT written on the tags
 const GUEST_DATABASE = {
   "321": { name: "Joyal Jose", type: "VIP", access: "Gate A" },
   "654": { name: "Aibal Jose", type: "Staff", access: "Gate B" },
@@ -8,52 +7,40 @@ const GUEST_DATABASE = {
 };
 
 function App() {
-  const [status, setStatus] = useState('SYSTEM READY');
+  const [status, setStatus] = useState('READY TO SCAN');
   const [scanResult, setScanResult] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
 
   const startScan = async () => {
     if (!('NDEFReader' in window)) {
-      setStatus('HARDWARE NOT SUPPORTED');
+      setStatus('NFC NOT SUPPORTED');
       return;
     }
-
     try {
       setIsScanning(true);
       const ndef = new NDEFReader();
       await ndef.scan();
-      setStatus('APPROACH TAG TO SENSOR...');
-
+      setStatus('HOLD TAG TO PHONE');
       ndef.onreading = (event) => {
         const { message } = event;
         let writtenText = "";
-
-        // Decode the written text from the NDEF records
         for (const record of message.records) {
           if (record.recordType === "text") {
             const textDecoder = new TextDecoder(record.encoding);
             writtenText = textDecoder.decode(record.data);
           }
         }
-
-        // Clean the text (remove spaces/newlines)
         const cleanID = writtenText.trim();
         const guest = GUEST_DATABASE[cleanID];
-
         if (guest) {
           setScanResult({ id: cleanID, ...guest, authorized: true });
-          setStatus('VERIFIED');
+          setStatus('MATCH FOUND');
         } else {
-          setScanResult({ 
-            id: cleanID || "Empty Tag", 
-            name: "UNKNOWN", 
-            type: "WARNING", 
-            authorized: false 
-          });
-          setStatus('ACCESS DENIED');
+          setScanResult({ id: cleanID || "Empty", name: "Unknown", type: "Invalid", authorized: false });
+          setStatus('NO MATCH');
         }
+        setIsScanning(false);
       };
-
     } catch (error) {
       setStatus(`ERROR: ${error.message}`);
       setIsScanning(false);
@@ -61,81 +48,94 @@ function App() {
   };
 
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <div style={styles.branding}>EVENT SECURITY PRO</div>
-        <div style={{...styles.statusDot, backgroundColor: isScanning ? '#00ff00' : '#ff0000'}}></div>
-      </header>
+    /* This outer div is the key to centering */
+    <div style={styles.viewPort}>
+      <div style={styles.container}>
+        <header style={styles.header}>
+          <span style={styles.brand}>EVENT SECURITY</span>
+          <div style={{...styles.dot, backgroundColor: isScanning ? '#2ecc71' : '#e74c3c'}}></div>
+        </header>
 
-      <div style={styles.main}>
-        {scanResult ? (
-          <div style={{
-            ...styles.idCard, 
-            boxShadow: scanResult.authorized ? '0 0 20px rgba(0,255,0,0.2)' : '0 0 20px rgba(255,0,0,0.2)',
-            borderColor: scanResult.authorized ? '#00ff00' : '#ff0000'
-          }}>
-            <div style={styles.cardHeader}>IDENTITY VERIFICATION</div>
-            
-            <div style={styles.idSection}>
-              <span style={styles.label}>TAG CONTENT (WRITTEN ID)</span>
-              <span style={styles.idValue}>{scanResult.id}</span>
+        <div style={styles.cardSection}>
+          {!scanResult ? (
+            <div style={styles.emptyContent}>
+              <div style={styles.circleIcon}>📡</div>
+              <h2 style={styles.infoTitle}>Tap to scan card</h2>
+              <p style={styles.infoSub}>Hold the NFC tag to your device</p>
             </div>
-
-            <div style={styles.nameSection}>
-              <h1 style={styles.name}>{scanResult.name}</h1>
-              <p style={{...styles.type, color: scanResult.authorized ? '#00ff00' : '#ff4444'}}>
-                {scanResult.type.toUpperCase()}
-              </p>
-            </div>
-
-            {scanResult.authorized && (
-              <div style={styles.accessZone}>
-                <span style={styles.label}>PERMITTED ZONE</span>
-                <div style={styles.zoneName}>{scanResult.access}</div>
+          ) : (
+            <div style={{...styles.idCard, borderColor: scanResult.authorized ? '#2ecc71' : '#e74c3c'}}>
+               <div style={{...styles.badge, backgroundColor: scanResult.authorized ? '#2ecc71' : '#e74c3c'}}>
+                {scanResult.authorized ? 'SCANNED SUCCESSFULLY' : 'INVALID ENTRY'}
               </div>
-            )}
-          </div>
-        ) : (
-          <div style={styles.emptyState}>
-            <p>STANDING BY FOR INPUT</p>
-          </div>
-        )}
-
-        <div style={styles.footer}>
-          <p style={styles.consoleText}>[{new Date().toLocaleTimeString()}] {status}</p>
-          <button 
-            onClick={startScan} 
-            disabled={isScanning}
-            style={{...styles.scanBtn, backgroundColor: isScanning ? '#333' : '#fff', color: isScanning ? '#666' : '#000'}}
-          >
-            {isScanning ? 'SCANNER ACTIVE...' : 'START SECURITY CHECK'}
-          </button>
+              <div style={styles.avatar}>👤</div>
+              <h1 style={styles.nameText}>{scanResult.name}</h1>
+              <p style={styles.typeText}>{scanResult.type.toUpperCase()}</p>
+              <p style={styles.idLabel}>ID: {scanResult.id}</p>
+              <button onClick={() => setScanResult(null)} style={styles.retryBtn}>Clear Result</button>
+            </div>
+          )}
         </div>
+
+        <footer style={styles.footer}>
+          <p style={styles.statusLine}>{status}</p>
+          {!scanResult && (
+            <button onClick={startScan} disabled={isScanning} style={styles.actionBtn}>
+              {isScanning ? 'ACTIVE...' : 'START CHECK'}
+            </button>
+          )}
+        </footer>
       </div>
     </div>
   );
 }
 
 const styles = {
-  container: { backgroundColor: '#0a0a0a', minHeight: '100vh', color: '#fff', fontFamily: 'monospace', display: 'flex', flexDirection: 'column' },
-  header: { padding: '15px 20px', borderBottom: '1px solid #222', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  branding: { letterSpacing: '3px', fontWeight: 'bold', fontSize: '0.9rem' },
-  statusDot: { width: '10px', height: '10px', borderRadius: '50%', boxShadow: '0 0 10px currentColor' },
-  main: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' },
-  idCard: { backgroundColor: '#111', width: '100%', maxWidth: '340px', borderRadius: '4px', border: '1px solid #333', padding: '20px' },
-  cardHeader: { fontSize: '0.6rem', color: '#666', marginBottom: '20px', borderBottom: '1px solid #222', paddingBottom: '5px' },
-  idSection: { marginBottom: '20px' },
-  label: { fontSize: '0.6rem', color: '#555', display: 'block', marginBottom: '5px' },
-  idValue: { fontSize: '1.2rem', color: '#00ccff', fontWeight: 'bold' },
-  nameSection: { textAlign: 'center', padding: '20px 0', borderTop: '1px solid #222', borderBottom: '1px solid #222' },
-  name: { fontSize: '2rem', margin: '0 0 5px 0', letterSpacing: '-1px' },
-  type: { margin: 0, fontSize: '0.9rem', fontWeight: 'bold' },
-  accessZone: { marginTop: '15px', textAlign: 'left' },
-  zoneName: { fontSize: '1.1rem', color: '#fff' },
-  emptyState: { textAlign: 'center', color: '#333' },
-  footer: { width: '100%', maxWidth: '340px', marginTop: '40px' },
-  consoleText: { fontSize: '0.7rem', color: '#00ccff', marginBottom: '10px' },
-  scanBtn: { width: '100%', padding: '18px', border: 'none', borderRadius: '2px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer' }
+  // THIS DIV FIXES THE LEFT-SIDE ISSUE
+  viewPort: {
+    width: '100vw',        // Full width of browser
+    height: '100vh',       // Full height of browser
+    display: 'flex',       // Enables Flexbox
+    justifyContent: 'center', // Centers horizontally
+    alignItems: 'center',     // Centers vertically
+    backgroundColor: '#f0f2f5',
+    margin: 0,
+    padding: 0,
+    position: 'fixed',     // Forces it to stay in place
+    top: 0,
+    left: 0
+  },
+  container: {
+    width: '90%',
+    maxWidth: '400px',     // Prevents desktop stretching
+    height: '90%',
+    maxHeight: '700px',
+    backgroundColor: '#ffffff',
+    borderRadius: '24px',
+    boxShadow: '0 15px 35px rgba(0,0,0,0.1)',
+    display: 'flex',
+    flexDirection: 'column',
+    padding: '24px',
+    boxSizing: 'border-box'
+  },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
+  brand: { fontSize: '12px', fontWeight: 'bold', color: '#bdc3c7', letterSpacing: '1px' },
+  dot: { width: '10px', height: '10px', borderRadius: '50%' },
+  cardSection: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  emptyContent: { textAlign: 'center' },
+  circleIcon: { fontSize: '50px', marginBottom: '15px' },
+  infoTitle: { fontSize: '20px', color: '#2c3e50', margin: '0' },
+  infoSub: { fontSize: '14px', color: '#95a5a6', marginTop: '8px' },
+  idCard: { width: '100%', border: '2px solid', borderRadius: '20px', padding: '20px', textAlign: 'center' },
+  badge: { color: '#fff', fontSize: '10px', fontWeight: 'bold', padding: '4px 12px', borderRadius: '10px', display: 'inline-block', marginBottom: '15px' },
+  avatar: { fontSize: '40px', background: '#f8f9fa', width: '70px', height: '70px', borderRadius: '50%', margin: '0 auto 10px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  nameText: { fontSize: '24px', margin: '0', color: '#2c3e50' },
+  typeText: { fontSize: '14px', fontWeight: 'bold', margin: '5px 0', color: '#7f8c8d' },
+  idLabel: { fontSize: '12px', color: '#bdc3c7' },
+  retryBtn: { background: 'none', border: 'none', color: '#3498db', marginTop: '15px', cursor: 'pointer', fontWeight: 'bold' },
+  footer: { marginTop: 'auto' },
+  statusLine: { textAlign: 'center', fontSize: '12px', color: '#3498db', fontWeight: 'bold', marginBottom: '12px' },
+  actionBtn: { width: '100%', padding: '16px', backgroundColor: '#3498db', color: '#fff', border: 'none', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }
 };
 
 export default App;
