@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-// Your Specific Guest Database
+// Database matches the TEXT written on the tags
 const GUEST_DATABASE = {
   "321": { name: "Joyal Jose", type: "VIP", access: "Gate A" },
   "654": { name: "Aibal Jose", type: "Staff", access: "Gate B" },
@@ -25,15 +25,31 @@ function App() {
       setStatus('APPROACH TAG TO SENSOR...');
 
       ndef.onreading = (event) => {
-        // Cleaning the ID in case of extra characters/spaces
-        const id = event.serialNumber.trim(); 
-        const guest = GUEST_DATABASE[id];
+        const { message } = event;
+        let writtenText = "";
+
+        // Decode the written text from the NDEF records
+        for (const record of message.records) {
+          if (record.recordType === "text") {
+            const textDecoder = new TextDecoder(record.encoding);
+            writtenText = textDecoder.decode(record.data);
+          }
+        }
+
+        // Clean the text (remove spaces/newlines)
+        const cleanID = writtenText.trim();
+        const guest = GUEST_DATABASE[cleanID];
 
         if (guest) {
-          setScanResult({ id, ...guest, authorized: true });
+          setScanResult({ id: cleanID, ...guest, authorized: true });
           setStatus('VERIFIED');
         } else {
-          setScanResult({ id, name: "UNKNOWN", type: "WARNING", authorized: false });
+          setScanResult({ 
+            id: cleanID || "Empty Tag", 
+            name: "UNKNOWN", 
+            type: "WARNING", 
+            authorized: false 
+          });
           setStatus('ACCESS DENIED');
         }
       };
@@ -61,7 +77,7 @@ function App() {
             <div style={styles.cardHeader}>IDENTITY VERIFICATION</div>
             
             <div style={styles.idSection}>
-              <span style={styles.label}>NFC SERIAL</span>
+              <span style={styles.label}>TAG CONTENT (WRITTEN ID)</span>
               <span style={styles.idValue}>{scanResult.id}</span>
             </div>
 
@@ -81,7 +97,6 @@ function App() {
           </div>
         ) : (
           <div style={styles.emptyState}>
-            <div style={styles.radarCircle}></div>
             <p>STANDING BY FOR INPUT</p>
           </div>
         )}
@@ -102,26 +117,25 @@ function App() {
 }
 
 const styles = {
-  container: { backgroundColor: '#0a0a0a', minHeight: '100vh', color: '#fff', fontFamily: '"Courier New", Courier, monospace', display: 'flex', flexDirection: 'column' },
+  container: { backgroundColor: '#0a0a0a', minHeight: '100vh', color: '#fff', fontFamily: 'monospace', display: 'flex', flexDirection: 'column' },
   header: { padding: '15px 20px', borderBottom: '1px solid #222', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   branding: { letterSpacing: '3px', fontWeight: 'bold', fontSize: '0.9rem' },
   statusDot: { width: '10px', height: '10px', borderRadius: '50%', boxShadow: '0 0 10px currentColor' },
   main: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' },
-  idCard: { backgroundColor: '#111', width: '100%', maxWidth: '340px', borderRadius: '4px', border: '1px solid #333', padding: '20px', position: 'relative', overflow: 'hidden' },
+  idCard: { backgroundColor: '#111', width: '100%', maxWidth: '340px', borderRadius: '4px', border: '1px solid #333', padding: '20px' },
   cardHeader: { fontSize: '0.6rem', color: '#666', marginBottom: '20px', borderBottom: '1px solid #222', paddingBottom: '5px' },
   idSection: { marginBottom: '20px' },
   label: { fontSize: '0.6rem', color: '#555', display: 'block', marginBottom: '5px' },
-  idValue: { fontSize: '1rem', color: '#00ccff' },
+  idValue: { fontSize: '1.2rem', color: '#00ccff', fontWeight: 'bold' },
   nameSection: { textAlign: 'center', padding: '20px 0', borderTop: '1px solid #222', borderBottom: '1px solid #222' },
   name: { fontSize: '2rem', margin: '0 0 5px 0', letterSpacing: '-1px' },
   type: { margin: 0, fontSize: '0.9rem', fontWeight: 'bold' },
   accessZone: { marginTop: '15px', textAlign: 'left' },
   zoneName: { fontSize: '1.1rem', color: '#fff' },
   emptyState: { textAlign: 'center', color: '#333' },
-  radarCircle: { width: '80px', height: '80px', border: '2px solid #222', borderRadius: '50%', margin: '0 auto 20px', borderTopColor: '#444', animation: 'spin 2s linear infinite' },
   footer: { width: '100%', maxWidth: '340px', marginTop: '40px' },
   consoleText: { fontSize: '0.7rem', color: '#00ccff', marginBottom: '10px' },
-  scanBtn: { width: '100%', padding: '18px', border: 'none', borderRadius: '2px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', transition: '0.2s' }
+  scanBtn: { width: '100%', padding: '18px', border: 'none', borderRadius: '2px', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer' }
 };
 
 export default App;
