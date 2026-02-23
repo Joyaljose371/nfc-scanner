@@ -31,9 +31,8 @@ function App() {
     if (hour < 12) setGreeting("Good Morning");
     else if (hour < 17) setGreeting("Good Afternoon");
     else setGreeting("Good Evening");
-  }, []);
 
-  useEffect(() => {
+    // AUTH CHECK: Only set scanResult if ID is exactly 321
     const params = new URLSearchParams(window.location.search);
     if (params.get('id') === "321") {
       setScanResult({ id: "321", name: "Joyal Jose" });
@@ -78,7 +77,6 @@ function App() {
     };
     setAcademicLogs([...academicLogs, newLog].sort((a, b) => a.period - b.period));
     setNote("");
-    if (navigator.vibrate) navigator.vibrate(40);
   };
 
   const addReminder = () => {
@@ -87,8 +85,21 @@ function App() {
     setReminderInput("");
   };
 
-  if (!scanResult) return <div style={styles.viewPort}><h2>Tap ID Card</h2></div>;
+  // IF ID IS NOT 321, SHOW ONLY THIS SCREEN
+  if (!scanResult) {
+    return (
+      <div style={styles.viewPort}>
+        <div style={styles.loginCard}>
+          <div style={styles.nfcIcon}>🔵</div>
+          <h2 style={{color: '#1e3a8a', marginBottom: '10px'}}>KE Academic Tracker</h2>
+          <p style={{color: '#64748b', fontSize: '14px'}}>Please tap your ID card to continue.</p>
+          <div style={styles.scanLine}></div>
+        </div>
+      </div>
+    );
+  }
 
+  // IF ID IS 321, SHOW THE FULL DASHBOARD
   return (
     <div style={styles.viewPort}>
       <div style={styles.container}>
@@ -164,21 +175,23 @@ function App() {
 
               <section style={styles.section}>
                 <p style={styles.sectionLabel}>REMINDERS</p>
-                <div style={styles.reminderInputGroup}>
-                  <input 
-                    style={styles.remInput} 
-                    placeholder="New reminder..." 
+                <div style={styles.formCard}>
+                  <textarea 
+                    style={{...styles.textarea, marginTop: '0px', minHeight: '60px'}} 
+                    placeholder="Add a new reminder..." 
                     value={reminderInput}
                     onChange={e => setReminderInput(e.target.value)}
                   />
-                  <button onClick={addReminder} style={styles.addBtn}>+</button>
+                  <button onClick={addReminder} style={{...styles.mainBtn, backgroundColor: '#334155'}}>ADD REMINDER</button>
                 </div>
-                {reminders.map(r => (
-                  <div key={r.id} style={styles.reminderItem}>
-                    <span>📌 {r.text}</span>
-                    <button style={styles.delBtn} onClick={() => setReminders(reminders.filter(i => i.id !== r.id))}>✕</button>
-                  </div>
-                ))}
+                <div style={{marginTop: '15px'}}>
+                  {reminders.map(r => (
+                    <div key={r.id} style={styles.reminderItem}>
+                      <span>📌 {r.text}</span>
+                      <button style={styles.delBtn} onClick={() => setReminders(reminders.filter(i => i.id !== r.id))}>✕</button>
+                    </div>
+                  ))}
+                </div>
               </section>
             </>
           )}
@@ -211,6 +224,12 @@ function App() {
 const styles = {
   viewPort: { width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', backgroundColor: '#f0f4f8', position: 'fixed', top: 0, left: 0, fontFamily: 'Inter, sans-serif' },
   container: { width: '100%', maxWidth: '420px', backgroundColor: '#fff', display: 'flex', flexDirection: 'column' },
+  
+  // LOGIN SCREEN STYLES
+  loginCard: { textAlign: 'center', alignSelf: 'center', padding: '40px', backgroundColor: '#fff', borderRadius: '30px', boxShadow: '0 20px 40px rgba(0,0,0,0.05)' },
+  nfcIcon: { fontSize: '80px', marginBottom: '20px' },
+  scanLine: { width: '60px', height: '4px', backgroundColor: '#1e3a8a', margin: '20px auto', borderRadius: '10px', animation: 'pulse 1.5s infinite' },
+
   header: { padding: '40px 25px 30px 25px', backgroundColor: '#1e3a8a', color: '#fff', borderBottomLeftRadius: '35px', borderBottomRightRadius: '35px' },
   topInfo: { textAlign: 'left', marginBottom: '25px' },
   greetingText: { fontSize: '14px', opacity: 0.8, margin: 0 },
@@ -218,28 +237,23 @@ const styles = {
   
   dateSelectorPill: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '50px', padding: '5px' },
   pillBtn: { background: 'none', border: 'none', color: '#fff', padding: '10px 20px', cursor: 'pointer' },
-  dateInfo: { display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }, // Centered date text
-  pillLabel: { fontSize: '9px', fontWeight: 'bold', color: '#60a5fa' },
+  dateInfo: { display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, textAlign: 'center' }, 
+  pillLabel: { fontSize: '9px', fontWeight: 'bold', color: '#60a5fa', width: '100%' },
   pillInput: { background: 'none', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '14px', textAlign: 'center', outline: 'none', width: '100%' },
 
   scrollArea: { flex: 1, overflowY: 'auto', padding: '25px' },
-  section: { marginBottom: '30px' },
+  section: { marginBottom: '35px' },
   sectionLabel: { fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', letterSpacing: '1px', marginBottom: '10px' },
-  
   formCard: { backgroundColor: '#f8fafc', padding: '20px', borderRadius: '20px', border: '1px solid #e2e8f0' },
   fieldLabel: { fontSize: '11px', color: '#64748b', marginBottom: '5px', display: 'block' },
   row: { display: 'flex', gap: '10px' },
   
-  // FIXED TEXTBOX VISIBILITY
-  select: { width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', color: '#1a202c', backgroundColor: '#fff' },
-  textarea: { width: '100%', boxSizing: 'border-box', marginTop: '15px', padding: '14px', borderRadius: '10px', border: '1px solid #cbd5e1', color: '#1a202c', backgroundColor: '#fff', minHeight: '90px' },
-  mainBtn: { width: '100%', marginTop: '15px', padding: '16px', backgroundColor: '#1e3a8a', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 'bold' },
+  select: { width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', color: '#1a202c', backgroundColor: '#fff', outline: 'none' },
+  textarea: { width: '100%', boxSizing: 'border-box', marginTop: '15px', padding: '14px', borderRadius: '10px', border: '1px solid #cbd5e1', color: '#1a202c', backgroundColor: '#fff', minHeight: '90px', fontFamily: 'inherit' },
+  mainBtn: { width: '100%', marginTop: '15px', padding: '16px', backgroundColor: '#1e3a8a', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' },
 
-  reminderInputGroup: { display: 'flex', gap: '8px', marginBottom: '15px' },
-  remInput: { flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', color: '#1a202c' },
-  addBtn: { width: '45px', backgroundColor: '#334155', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '20px' },
   reminderItem: { display: 'flex', justifyContent: 'space-between', padding: '12px', backgroundColor: '#fffdf2', borderRadius: '10px', borderLeft: '4px solid #f1c40f', marginBottom: '8px', color: '#1a202c', fontSize: '14px' },
-  delBtn: { background: 'none', border: 'none', color: '#e74c3c' },
+  delBtn: { background: 'none', border: 'none', color: '#e74c3c', cursor: 'pointer' },
 
   logCard: { display: 'flex', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '15px', overflow: 'hidden', marginBottom: '15px' },
   logSide: { backgroundColor: '#f8fafc', width: '55px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#1e3a8a' },
