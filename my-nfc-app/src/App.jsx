@@ -11,7 +11,7 @@ const SUBJECT_LIST = Object.keys(SUBJECT_MAP);
 
 function App() {
   const [scanResult, setScanResult] = useState(null);
-  const [view, setView] = useState("dashboard"); // 'dashboard' or 'home'
+  const [view, setView] = useState("dashboard");
   const [greeting, setGreeting] = useState("");
   const todayStr = new Date().toISOString().split('T')[0];
   const [selectedDate, setSelectedDate] = useState(todayStr);
@@ -85,13 +85,12 @@ function App() {
     setReminderInput("");
   };
 
-  // GRAPH LOGIC: Calculate Subject Percentiles
-  const getSubjectStats = () => {
-    if (!scanResult) return [];
+  // UPDATED ANALYTICS LOGIC
+  const getAnalytics = () => {
+    if (!scanResult) return { subjectStats: [], teacherStats: [] };
     let allLogs = [];
     let uniqueDates = new Set();
     
-    // Scan localstorage for all logs from this user
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key.startsWith(`logs_${scanResult.id}_`)) {
@@ -101,22 +100,33 @@ function App() {
       }
     }
 
-    const totalDays = uniqueDates.size || 1;
-    return SUBJECT_LIST.map(sub => {
+    const totalDays = uniqueDates.size || 0;
+
+    // Subject Percentiles (0 if no data)
+    const subjectStats = SUBJECT_LIST.map(sub => {
       const count = allLogs.filter(l => l.subject === sub).length;
-      const percentage = Math.min(Math.round((count / (totalDays * 1)) * 100), 100); 
-      return { name: sub, percent: percentage, count };
+      const percentage = totalDays > 0 ? Math.round((count / (totalDays * 7)) * 100) : 0; 
+      return { name: sub, percent: percentage };
     });
+
+    // Teacher Ranking
+    const teacherMap = {};
+    allLogs.forEach(log => {
+      teacherMap[log.teacher] = (teacherMap[log.teacher] || 0) + 1;
+    });
+    const teacherStats = Object.keys(teacherMap)
+      .map(name => ({ name, count: teacherMap[name] }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3); // Top 3 teachers
+
+    return { subjectStats, teacherStats };
   };
 
-  if (!scanResult) return (
-    <div style={styles.viewPort}>
-      <div style={styles.loginCard}><div style={styles.nfcIcon}>🔵</div><h2>KE Tracker</h2><p>Tap ID Card</p></div>
-    </div>
-  );
+  if (!scanResult) return <div style={styles.viewPort}><h2>ID Required</h2></div>;
 
-  // --- HOME VIEW (GRAPH) ---
+  // --- HOME INTERFACE (STATS) ---
   if (view === "home") {
+    const { subjectStats, teacherStats } = getAnalytics();
     return (
       <div style={styles.viewPort}>
         <div style={styles.container}>
@@ -127,21 +137,35 @@ function App() {
             </div>
           </header>
           <div style={styles.scrollArea}>
-            <p style={styles.sectionLabel}>SUBJECT RECORD DISTRIBUTION</p>
-            <div style={styles.formCard}>
-              {getSubjectStats().map(stat => (
-                <div key={stat.name} style={{marginBottom: '20px'}}>
-                  <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
-                    <span style={{fontWeight: 'bold', color: '#1e3a8a'}}>{stat.name}</span>
-                    <span style={{fontSize: '12px', color: '#64748b'}}>{stat.percent}% Frequency</span>
+            <section style={styles.section}>
+              <p style={styles.sectionLabel}>SUBJECT PERCENTILE</p>
+              <div style={styles.formCard}>
+                {subjectStats.map(stat => (
+                  <div key={stat.name} style={{marginBottom: '20px'}}>
+                    <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
+                      <span style={{fontWeight: 'bold', color: '#1e3a8a'}}>{stat.name}</span>
+                      <span style={{fontSize: '12px', color: '#64748b'}}>{stat.percent}%</span>
+                    </div>
+                    <div style={styles.graphTrack}>
+                      <div style={{...styles.graphFill, width: `${stat.percent}%`}}></div>
+                    </div>
                   </div>
-                  <div style={styles.graphTrack}>
-                    <div style={{...styles.graphFill, width: `${stat.percent}%`}}></div>
+                ))}
+              </div>
+            </section>
+
+            <section style={styles.section}>
+              <p style={styles.sectionLabel}>TOP FACULTY (BY CLASSES)</p>
+              <div style={styles.formCard}>
+                {teacherStats.length === 0 && <p style={styles.empty}>No teaching data yet.</p>}
+                {teacherStats.map((t, index) => (
+                  <div key={t.name} style={{display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: index < 2 ? '1px solid #f1f5f9' : 'none'}}>
+                    <span style={{fontSize: '14px', color: '#1e293b', fontWeight: '500'}}>{t.name}</span>
+                    <span style={{fontSize: '12px', backgroundColor: '#eff6ff', color: '#1e3a8a', padding: '2px 8px', borderRadius: '5px', fontWeight: 'bold'}}>{t.count} Classes</span>
                   </div>
-                </div>
-              ))}
-            </div>
-            <button onClick={() => setView('dashboard')} style={{...styles.mainBtn, marginTop: '30px'}}>OPEN TRACKER</button>
+                ))}
+              </div>
+            </section>
           </div>
         </div>
       </div>
@@ -160,7 +184,6 @@ function App() {
             </div>
             <button onClick={() => setView('home')} style={styles.backIconBtn}>📊</button>
           </div>
-          
           <div style={styles.dateSelectorPill}>
             <button onClick={() => { const d = new Date(selectedDate); d.setDate(d.getDate() - 1); setSelectedDate(d.toISOString().split('T')[0]); }} style={styles.pillBtn}>◀</button>
             <div style={styles.dateInfo}>
@@ -181,7 +204,6 @@ function App() {
                     <div style={{flex: 1}}><label style={styles.fieldLabel}>Period</label>
                       <select style={styles.select} value={period} onChange={e => setPeriod(e.target.value)}>
                         {availablePeriods.map(p => <option key={p} value={p}>P {p}</option>)}
-                        {availablePeriods.length === 0 && <option>Done</option>}
                       </select>
                     </div>
                     <div style={{flex: 2}}><label style={styles.fieldLabel}>Subject</label>
@@ -196,7 +218,7 @@ function App() {
                     </select>
                   </div>
                   <textarea style={styles.textarea} placeholder="Enter notes..." value={note} onChange={e => setNote(e.target.value)}/>
-                  <button onClick={handleAddLog} disabled={availablePeriods.length === 0} style={styles.mainBtn}>SAVE ENTRY</button>
+                  <button onClick={handleAddLog} style={styles.mainBtn}>SAVE ENTRY</button>
                 </div>
               </section>
 
@@ -214,9 +236,7 @@ function App() {
               </section>
             </>
           )}
-
-          {!isToday && <div style={styles.archiveBanner}>🕒 Viewing Archive: {selectedDate}</div>}
-
+          {!isToday && <div style={styles.archiveBanner}>🕒 Archive: {selectedDate}</div>}
           <section style={styles.section}>
             <p style={styles.sectionLabel}>TIMELINE</p>
             {academicLogs.map(log => (
@@ -239,19 +259,14 @@ function App() {
 const styles = {
   viewPort: { width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', backgroundColor: '#f0f4f8', position: 'fixed', top: 0, left: 0, fontFamily: 'Inter, sans-serif' },
   container: { width: '100%', maxWidth: '420px', backgroundColor: '#fff', display: 'flex', flexDirection: 'column' },
-  loginCard: { textAlign: 'center', alignSelf: 'center', padding: '40px' },
-  nfcIcon: { fontSize: '80px', marginBottom: '20px' },
   header: { padding: '40px 25px 30px 25px', backgroundColor: '#1e3a8a', color: '#fff', borderBottomLeftRadius: '35px', borderBottomRightRadius: '35px' },
   topInfo: { textAlign: 'left', marginBottom: '25px' },
   greetingText: { fontSize: '14px', opacity: 0.8, margin: 0 },
   studentName: { fontSize: '28px', fontWeight: '800', margin: '5px 0 0 0' },
   backIconBtn: { background: 'rgba(255,255,255,0.2)', border: 'none', padding: '10px', borderRadius: '12px', fontSize: '20px', cursor: 'pointer' },
   backBtn: { background: 'none', border: 'none', color: '#fff', fontSize: '24px', cursor: 'pointer', transform: 'rotate(180deg)' },
-  
-  // Graph Styles
-  graphTrack: { width: '100%', height: '8px', backgroundColor: '#e2e8f0', borderRadius: '10px', overflow: 'hidden' },
-  graphFill: { height: '100%', backgroundColor: '#1e3a8a', borderRadius: '10px' },
-
+  graphTrack: { width: '100%', height: '10px', backgroundColor: '#e2e8f0', borderRadius: '10px', overflow: 'hidden' },
+  graphFill: { height: '100%', backgroundColor: '#1e3a8a', borderRadius: '10px', transition: 'width 0.5s ease-in-out' },
   dateSelectorPill: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '50px', padding: '5px' },
   pillBtn: { background: 'none', border: 'none', color: '#fff', padding: '10px 20px', cursor: 'pointer' },
   dateInfo: { display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, textAlign: 'center' }, 
