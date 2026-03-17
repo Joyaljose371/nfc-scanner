@@ -9,6 +9,47 @@ const SUBJECT_MAP = {
 
 const SUBJECT_LIST = Object.keys(SUBJECT_MAP);
 
+// Moved styles to the top to prevent "undefined" errors during render
+const styles = {
+  viewPort: { width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', backgroundColor: '#f0f4f8', position: 'fixed', top: 0, left: 0, fontFamily: 'Inter, sans-serif' },
+  container: { width: '100%', maxWidth: '420px', backgroundColor: '#fff', display: 'flex', flexDirection: 'column' },
+  scanIconContainer: { position: 'relative', width: '100px', height: '100px', backgroundColor: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '30px' },
+  pulseRing: { position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', animation: 'pulse 2s infinite' },
+  header: { padding: '40px 25px 30px 25px', backgroundColor: '#1e3a8a', color: '#fff', borderBottomLeftRadius: '35px', borderBottomRightRadius: '35px' },
+  topInfo: { textAlign: 'left' },
+  greetingText: { fontSize: '14px', opacity: 0.8, margin: 0 },
+  studentName: { fontSize: '28px', fontWeight: '800', margin: '5px 0 0 0' },
+  backIconBtn: { background: 'rgba(255,255,255,0.2)', border: 'none', padding: '10px', borderRadius: '12px', fontSize: '20px', cursor: 'pointer' },
+  dateSelectorPill: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '50px', padding: '5px', marginTop: '20px' },
+  pillBtn: { background: 'none', border: 'none', color: '#fff', padding: '10px 20px', cursor: 'pointer' },
+  dateInfo: { display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, textAlign: 'center' }, 
+  pillLabel: { fontSize: '9px', fontWeight: 'bold', color: '#60a5fa' },
+  pillInput: { background: 'none', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '14px', textAlign: 'center', outline: 'none', width: '100%' },
+  scrollArea: { flex: 1, overflowY: 'auto', padding: '25px' },
+  section: { marginBottom: '35px' },
+  sectionLabel: { fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', letterSpacing: '1px', marginBottom: '10px' },
+  formCard: { backgroundColor: '#f8fafc', padding: '20px', borderRadius: '20px', border: '1px solid #e2e8f0' },
+  fieldLabel: { fontSize: '11px', color: '#64748b', marginBottom: '5px', display: 'block' },
+  row: { display: 'flex', gap: '10px' },
+  select: { width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', color: '#1a202c', backgroundColor: '#fff' },
+  textarea: { width: '100%', boxSizing: 'border-box', marginTop: '15px', padding: '14px', borderRadius: '10px', border: '1px solid #cbd5e1', color: '#1a202c', backgroundColor: '#fff', minHeight: '90px', fontFamily: 'inherit' },
+  mainBtn: { width: '100%', marginTop: '15px', padding: '16px', backgroundColor: '#1e3a8a', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' },
+  reminderItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#fffdf2', borderRadius: '10px', borderLeft: '4px solid #f1c40f', marginBottom: '8px', color: '#1a202c', fontSize: '14px' },
+  delBtn: { background: 'none', border: 'none', color: '#e74c3c', cursor: 'pointer' },
+  textBtn: { background: 'none', border: 'none', color: '#1e3a8a', fontWeight: 'bold', cursor: 'pointer' },
+  logCard: { display: 'flex', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '15px', overflow: 'hidden', marginBottom: '15px' },
+  logSide: { backgroundColor: '#f8fafc', width: '65px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#1e3a8a', fontSize: '12px', textAlign: 'center' },
+  logMain: { padding: '15px', flex: 1 },
+  logHeader: { display: 'flex', justifyContent: 'space-between' },
+  logSubject: { fontWeight: 'bold', color: '#1a202c' },
+  logTeacher: { fontSize: '12px', color: '#64748b' },
+  logNote: { fontSize: '13px', color: '#334155', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', borderLeft: '3px solid #1e3a8a', marginTop: '5px' },
+  searchInput: { width: '100%', padding: '12px 15px', borderRadius: '12px', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#1a202c', fontSize: '14px', outline: 'none', boxSizing: 'border-box' },
+  bypassBtn: { marginTop: '50px', background: 'none', border: '1px dashed #cbd5e1', color: '#cbd5e1', padding: '8px 15px', borderRadius: '8px', fontSize: '11px', cursor: 'pointer' },
+  notifyLink: { background: 'none', border: 'none', color: '#1e3a8a', fontSize: '12px', marginTop: '10px', cursor: 'pointer', textDecoration: 'underline' },
+  searchBoxContainer: { marginBottom: '20px' }
+};
+
 function App() {
   const [scanResult, setScanResult] = useState(null);
   const [view, setView] = useState("dashboard"); 
@@ -18,14 +59,14 @@ function App() {
   
   const [academicLogs, setAcademicLogs] = useState([]);
   const [reminders, setReminders] = useState([]);
-  const [reminderInput, setReminderInput] = useState("");
-  
   const [goals, setGoals] = useState(() => {
     const saved = localStorage.getItem('user_goals');
     return saved ? JSON.parse(saved) : [];
   });
+  
   const [goalInput, setGoalInput] = useState("");
   const [goalType, setGoalType] = useState("daily");
+  const [goalTime, setGoalTime] = useState(""); // State for the Time Sitter
 
   const [note, setNote] = useState("");
   const [period, setPeriod] = useState("1");
@@ -88,6 +129,25 @@ function App() {
     }
   };
 
+  const scheduleBackgroundReminder = (text, time) => {
+    if (!time) return;
+    const [hours, minutes] = time.split(':');
+    const target = new Date();
+    target.setHours(parseInt(hours), parseInt(minutes), 0);
+
+    let delay = target.getTime() - new Date().getTime();
+    if (delay < 0) delay += 24 * 60 * 60 * 1000;
+
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({
+        type: 'SET_REMINDER',
+        title: 'Goal Reminder',
+        body: `Time for: ${text}`,
+        delay: delay
+      });
+    }
+  };
+
   const requestNotify = () => {
     Notification.requestPermission().then(permission => {
       if (permission === 'granted') {
@@ -98,9 +158,17 @@ function App() {
 
   const addGoal = () => {
     if (!goalInput.trim()) return;
-    const newGoal = { id: Date.now(), text: goalInput, type: goalType, status: 'undone' };
+    const newGoal = { 
+      id: Date.now(), 
+      text: goalInput, 
+      type: goalType, 
+      status: 'undone', 
+      time: goalTime 
+    };
     setGoals([...goals, newGoal]);
+    if (goalTime) scheduleBackgroundReminder(goalInput, goalTime);
     setGoalInput("");
+    setGoalTime("");
   };
 
   const toggleGoal = (id) => {
@@ -142,35 +210,24 @@ function App() {
   }, [academicLogs, subject]);
 
   const getAnalyticsAndSearch = () => {
-    if (!scanResult) return { subjectStats: [], teacherStats: [], searchResults: [] };
+    if (!scanResult) return { searchResults: [] };
     let allLogs = [];
-    let uniqueDates = new Set();
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.startsWith(`logs_${scanResult.id}_`)) {
         const logs = JSON.parse(localStorage.getItem(key));
         const logDate = key.split('_')[2];
         allLogs = [...allLogs, ...logs.map(l => ({...l, logDate}))];
-        uniqueDates.add(logDate);
       }
     }
-    const totalDays = uniqueDates.size || 0;
-    const subjectStats = SUBJECT_LIST.map(sub => {
-      const count = allLogs.filter(l => l.subject === sub).length;
-      const percentage = totalDays > 0 ? Math.round((count / (totalDays * 7)) * 100) : 0; 
-      return { name: sub, percent: percentage };
-    });
-    const teacherMap = {};
-    allLogs.forEach(log => { teacherMap[log.teacher] = (teacherMap[log.teacher] || 0) + 1; });
-    const teacherStats = Object.keys(teacherMap).map(name => ({ name, count: teacherMap[name] })).sort((a, b) => b.count - a.count).slice(0, 3);
     const searchResults = searchQuery.trim() === "" ? [] : allLogs.filter(log => 
       log.note.toLowerCase().includes(searchQuery.toLowerCase()) || 
       log.subject.toLowerCase().includes(searchQuery.toLowerCase())
     ).reverse();
-    return { subjectStats, teacherStats, searchResults };
+    return { searchResults };
   };
 
-  const { subjectStats, teacherStats, searchResults } = getAnalyticsAndSearch();
+  const { searchResults } = getAnalyticsAndSearch();
 
   const highlightText = (text, highlight) => {
     if (!highlight.trim()) return text;
@@ -194,38 +251,12 @@ function App() {
               <span style={{fontSize: '50px'}}>🪪</span>
            </div>
            <h2 style={{color: '#1e3a8a', fontSize: '24px', fontWeight: '800', marginBottom: '10px'}}>Ready to Scan</h2>
-           <p style={{color: '#64748b', fontSize: '15px', lineHeight: '1.5'}}>Please tap your ID card to access your academic logs and reminders.</p>
            <button onClick={() => setScanResult({ id: "321", name: "Joyal Jose" })} style={styles.bypassBtn}>TEST: BYPASS SCAN</button>
         </div>
       </div>
     );
   }
-// src/App.jsx (or Goal Component)
 
-const handleAddGoalWithReminder = (goalText, goalTime) => {
-  // 1. Calculate the millisecond delay
-  const [hours, minutes] = goalTime.split(':');
-  const target = new Date();
-  target.setHours(parseInt(hours), parseInt(minutes), 0);
-
-  let delay = target.getTime() - new Date().getTime();
-  
-  // If the time is earlier today, set it for tomorrow
-  if (delay < 0) delay += 24 * 60 * 60 * 1000;
-
-  // 2. This is the "Bridge" to the Service Worker
-  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage({
-      type: 'SET_REMINDER',
-      title: 'Academic Goal Tracker',
-      body: `Reminder: ${goalText}`,
-      delay: delay
-    });
-    console.log("Reminder data sent to Service Worker");
-  } else {
-    console.error("Service Worker not active yet");
-  }
-};
   return (
     <div style={styles.viewPort}>
       <div style={styles.container}>
@@ -255,6 +286,10 @@ const handleAddGoalWithReminder = (goalText, goalTime) => {
               <p style={styles.sectionLabel}>GOAL TRACKER</p>
               <div style={styles.formCard}>
                 <input style={styles.searchInput} placeholder="What is your goal?" value={goalInput} onChange={e => setGoalInput(e.target.value)} />
+                <div style={{marginTop: '15px'}}>
+                  <label style={styles.fieldLabel}>Reminder Time (Time Sitter)</label>
+                  <input type="time" style={styles.select} value={goalTime} onChange={e => setGoalTime(e.target.value)} />
+                </div>
                 <div style={{display: 'flex', gap: '10px', marginTop: '10px'}}>
                   <select style={{...styles.select, flex: 1}} value={goalType} onChange={e => setGoalType(e.target.value)}>
                     <option value="daily">Daily</option>
@@ -269,7 +304,10 @@ const handleAddGoalWithReminder = (goalText, goalTime) => {
                   <p style={styles.sectionLabel}>{type.toUpperCase()} GOALS</p>
                   {goals.filter(g => g.type === type).map(g => (
                     <div key={g.id} style={{...styles.reminderItem, backgroundColor: g.status === 'done' ? '#f0fdf4' : '#fffdf2', borderLeftColor: g.status === 'done' ? '#22c55e' : '#f1c40f'}}>
-                      <span style={{textDecoration: g.status === 'done' ? 'line-through' : 'none', flex: 1}}>{g.status === 'done' ? '✅' : '⏳'} {g.text}</span>
+                      <div style={{display: 'flex', flexDirection: 'column', flex: 1}}>
+                        <span style={{textDecoration: g.status === 'done' ? 'line-through' : 'none'}}>{g.status === 'done' ? '✅' : '⏳'} {g.text}</span>
+                        {g.time && <span style={{fontSize: '10px', color: '#64748b'}}>⏰ Scheduled for {g.time}</span>}
+                      </div>
                       <div style={{display: 'flex', gap: '10px'}}>
                         <button style={styles.textBtn} onClick={() => toggleGoal(g.id)}>{g.status === 'done' ? 'Undo' : 'Done'}</button>
                         <button style={styles.delBtn} onClick={() => setGoals(goals.filter(item => item.id !== g.id))}>✕</button>
@@ -280,7 +318,6 @@ const handleAddGoalWithReminder = (goalText, goalTime) => {
               ))}
             </section>
           )}
-          
 
           {view === 'dashboard' && (
             <>
@@ -342,46 +379,5 @@ const handleAddGoalWithReminder = (goalText, goalTime) => {
     </div>
   );
 }
-
-const styles = {
-  viewPort: { width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', backgroundColor: '#f0f4f8', position: 'fixed', top: 0, left: 0, fontFamily: 'Inter, sans-serif' },
-  container: { width: '100%', maxWidth: '420px', backgroundColor: '#fff', display: 'flex', flexDirection: 'column' },
-  scanIconContainer: { position: 'relative', width: '100px', height: '100px', backgroundColor: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '30px' },
-  pulseRing: { position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', animation: 'pulse 2s infinite' },
-  header: { padding: '40px 25px 30px 25px', backgroundColor: '#1e3a8a', color: '#fff', borderBottomLeftRadius: '35px', borderBottomRightRadius: '35px' },
-  topInfo: { textAlign: 'left' },
-  greetingText: { fontSize: '14px', opacity: 0.8, margin: 0 },
-  studentName: { fontSize: '28px', fontWeight: '800', margin: '5px 0 0 0' },
-  backIconBtn: { background: 'rgba(255,255,255,0.2)', border: 'none', padding: '10px', borderRadius: '12px', fontSize: '20px', cursor: 'pointer' },
-  dateSelectorPill: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '50px', padding: '5px', marginTop: '20px' },
-  pillBtn: { background: 'none', border: 'none', color: '#fff', padding: '10px 20px', cursor: 'pointer' },
-  dateInfo: { display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, textAlign: 'center' }, 
-  pillLabel: { fontSize: '9px', fontWeight: 'bold', color: '#60a5fa' },
-  pillInput: { background: 'none', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '14px', textAlign: 'center', outline: 'none', width: '100%' },
-  scrollArea: { flex: 1, overflowY: 'auto', padding: '25px' },
-  section: { marginBottom: '35px' },
-  sectionLabel: { fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', letterSpacing: '1px', marginBottom: '10px' },
-  formCard: { backgroundColor: '#f8fafc', padding: '20px', borderRadius: '20px', border: '1px solid #e2e8f0' },
-  fieldLabel: { fontSize: '11px', color: '#64748b', marginBottom: '5px', display: 'block' },
-  row: { display: 'flex', gap: '10px' },
-  select: { width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', color: '#1a202c', backgroundColor: '#fff' },
-  textarea: { width: '100%', boxSizing: 'border-box', marginTop: '15px', padding: '14px', borderRadius: '10px', border: '1px solid #cbd5e1', color: '#1a202c', backgroundColor: '#fff', minHeight: '90px', fontFamily: 'inherit' },
-  mainBtn: { width: '100%', marginTop: '15px', padding: '16px', backgroundColor: '#1e3a8a', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' },
-  reminderItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#fffdf2', borderRadius: '10px', borderLeft: '4px solid #f1c40f', marginBottom: '8px', color: '#1a202c', fontSize: '14px' },
-  delBtn: { background: 'none', border: 'none', color: '#e74c3c', cursor: 'pointer' },
-  textBtn: { background: 'none', border: 'none', color: '#1e3a8a', fontWeight: 'bold', cursor: 'pointer' },
-  logCard: { display: 'flex', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '15px', overflow: 'hidden', marginBottom: '15px' },
-  logSide: { backgroundColor: '#f8fafc', width: '65px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#1e3a8a', fontSize: '12px', textAlign: 'center' },
-  logMain: { padding: '15px', flex: 1 },
-  logHeader: { display: 'flex', justifyContent: 'space-between' },
-  logSubject: { fontWeight: 'bold', color: '#1a202c' },
-  logTeacher: { fontSize: '12px', color: '#64748b' },
-  logNote: { fontSize: '13px', color: '#334155', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', borderLeft: '3px solid #1e3a8a', marginTop: '5px' },
-  empty: { textAlign: 'center', color: '#94a3b8', fontSize: '14px' },
-  searchInput: { width: '100%', padding: '12px 15px', borderRadius: '12px', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#1a202c', fontSize: '14px', outline: 'none', boxSizing: 'border-box' },
-  bypassBtn: { marginTop: '50px', background: 'none', border: '1px dashed #cbd5e1', color: '#cbd5e1', padding: '8px 15px', borderRadius: '8px', fontSize: '11px', cursor: 'pointer' },
-  notifyLink: { background: 'none', border: 'none', color: '#1e3a8a', fontSize: '12px', marginTop: '10px', cursor: 'pointer', textDecoration: 'underline' },
-  searchBoxContainer: { marginBottom: '20px' }
-};
 
 export default App;
