@@ -31,3 +31,20 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+// public/service-worker.js
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SET_REMINDER') {
+    const { title, body, delay } = event.data;
+
+    setTimeout(() => {
+      self.registration.showNotification(title, {
+        body: body,
+        icon: '/logo192.png',
+        vibrate: [200, 100, 200],
+        badge: '/logo192.png',
+        tag: 'goal-alert' 
+      });
+    }, delay);
+  }
+});
