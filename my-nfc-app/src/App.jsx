@@ -9,7 +9,7 @@ const SUBJECT_MAP = {
 
 const SUBJECT_LIST = Object.keys(SUBJECT_MAP);
 
-// Moved styles to the top to prevent "undefined" errors during render
+// 1. Move styles to the top to ensure they are defined before the component renders
 const styles = {
   viewPort: { width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', backgroundColor: '#f0f4f8', position: 'fixed', top: 0, left: 0, fontFamily: 'Inter, sans-serif' },
   container: { width: '100%', maxWidth: '420px', backgroundColor: '#fff', display: 'flex', flexDirection: 'column' },
@@ -59,14 +59,14 @@ function App() {
   
   const [academicLogs, setAcademicLogs] = useState([]);
   const [reminders, setReminders] = useState([]);
+  
   const [goals, setGoals] = useState(() => {
     const saved = localStorage.getItem('user_goals');
     return saved ? JSON.parse(saved) : [];
   });
-  
   const [goalInput, setGoalInput] = useState("");
   const [goalType, setGoalType] = useState("daily");
-  const [goalTime, setGoalTime] = useState(""); // State for the Time Sitter
+  const [goalTime, setGoalTime] = useState(""); // 2. State for Time Sitter
 
   const [note, setNote] = useState("");
   const [period, setPeriod] = useState("1");
@@ -129,25 +129,6 @@ function App() {
     }
   };
 
-  const scheduleBackgroundReminder = (text, time) => {
-    if (!time) return;
-    const [hours, minutes] = time.split(':');
-    const target = new Date();
-    target.setHours(parseInt(hours), parseInt(minutes), 0);
-
-    let delay = target.getTime() - new Date().getTime();
-    if (delay < 0) delay += 24 * 60 * 60 * 1000;
-
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({
-        type: 'SET_REMINDER',
-        title: 'Goal Reminder',
-        body: `Time for: ${text}`,
-        delay: delay
-      });
-    }
-  };
-
   const requestNotify = () => {
     Notification.requestPermission().then(permission => {
       if (permission === 'granted') {
@@ -156,17 +137,36 @@ function App() {
     });
   };
 
+  // 3. Integrated Goal Addition with Scheduling Logic
   const addGoal = () => {
     if (!goalInput.trim()) return;
+    
     const newGoal = { 
       id: Date.now(), 
       text: goalInput, 
       type: goalType, 
-      status: 'undone', 
+      status: 'undone',
       time: goalTime 
     };
+
+    if (goalTime) {
+      const [hours, minutes] = goalTime.split(':');
+      const target = new Date();
+      target.setHours(parseInt(hours), parseInt(minutes), 0);
+      let delay = target.getTime() - new Date().getTime();
+      if (delay < 0) delay += 24 * 60 * 60 * 1000;
+
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'SET_REMINDER',
+          title: 'Goal Reminder',
+          body: `Reminder: ${goalInput}`,
+          delay: delay
+        });
+      }
+    }
+
     setGoals([...goals, newGoal]);
-    if (goalTime) scheduleBackgroundReminder(goalInput, goalTime);
     setGoalInput("");
     setGoalTime("");
   };
@@ -251,6 +251,7 @@ function App() {
               <span style={{fontSize: '50px'}}>🪪</span>
            </div>
            <h2 style={{color: '#1e3a8a', fontSize: '24px', fontWeight: '800', marginBottom: '10px'}}>Ready to Scan</h2>
+           <p style={{color: '#64748b', fontSize: '15px', lineHeight: '1.5'}}>Please tap your ID card to access your academic logs.</p>
            <button onClick={() => setScanResult({ id: "321", name: "Joyal Jose" })} style={styles.bypassBtn}>TEST: BYPASS SCAN</button>
         </div>
       </div>
@@ -287,8 +288,8 @@ function App() {
               <div style={styles.formCard}>
                 <input style={styles.searchInput} placeholder="What is your goal?" value={goalInput} onChange={e => setGoalInput(e.target.value)} />
                 <div style={{marginTop: '15px'}}>
-                  <label style={styles.fieldLabel}>Reminder Time (Time Sitter)</label>
-                  <input type="time" style={styles.select} value={goalTime} onChange={e => setGoalTime(e.target.value)} />
+                   <label style={styles.fieldLabel}>Set Reminder Time</label>
+                   <input type="time" style={styles.select} value={goalTime} onChange={e => setGoalTime(e.target.value)} />
                 </div>
                 <div style={{display: 'flex', gap: '10px', marginTop: '10px'}}>
                   <select style={{...styles.select, flex: 1}} value={goalType} onChange={e => setGoalType(e.target.value)}>
