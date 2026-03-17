@@ -9,49 +9,7 @@ const SUBJECT_MAP = {
 
 const SUBJECT_LIST = Object.keys(SUBJECT_MAP);
 
-// Moved styles outside to ensure no re-declaration issues
-const styles = {
-  viewPort: { width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', backgroundColor: '#f0f4f8', position: 'fixed', top: 0, left: 0, fontFamily: 'Inter, sans-serif' },
-  container: { width: '100%', maxWidth: '420px', backgroundColor: '#fff', display: 'flex', flexDirection: 'column' },
-  scanIconContainer: { position: 'relative', width: '100px', height: '100px', backgroundColor: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '30px' },
-  pulseRing: { position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', animation: 'pulse 2s infinite' },
-  header: { padding: '40px 25px 30px 25px', backgroundColor: '#1e3a8a', color: '#fff', borderBottomLeftRadius: '35px', borderBottomRightRadius: '35px' },
-  topInfo: { textAlign: 'left' },
-  greetingText: { fontSize: '14px', opacity: 0.8, margin: 0 },
-  studentName: { fontSize: '28px', fontWeight: '800', margin: '5px 0 0 0' },
-  backIconBtn: { background: 'rgba(255,255,255,0.2)', border: 'none', padding: '10px', borderRadius: '12px', fontSize: '20px', cursor: 'pointer' },
-  dateSelectorPill: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '50px', padding: '5px', marginTop: '20px' },
-  pillBtn: { background: 'none', border: 'none', color: '#fff', padding: '10px 20px', cursor: 'pointer' },
-  dateInfo: { display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, textAlign: 'center' }, 
-  pillLabel: { fontSize: '9px', fontWeight: 'bold', color: '#60a5fa' },
-  pillInput: { background: 'none', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '14px', textAlign: 'center', outline: 'none', width: '100%' },
-  scrollArea: { flex: 1, overflowY: 'auto', padding: '25px' },
-  section: { marginBottom: '35px' },
-  sectionLabel: { fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', letterSpacing: '1px', marginBottom: '10px' },
-  formCard: { backgroundColor: '#f8fafc', padding: '20px', borderRadius: '20px', border: '1px solid #e2e8f0' },
-  fieldLabel: { fontSize: '11px', color: '#64748b', marginBottom: '5px', display: 'block' },
-  row: { display: 'flex', gap: '10px' },
-  select: { width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', color: '#1a202c', backgroundColor: '#fff' },
-  textarea: { width: '100%', boxSizing: 'border-box', marginTop: '15px', padding: '14px', borderRadius: '10px', border: '1px solid #cbd5e1', color: '#1a202c', backgroundColor: '#fff', minHeight: '90px', fontFamily: 'inherit' },
-  mainBtn: { width: '100%', marginTop: '15px', padding: '16px', backgroundColor: '#1e3a8a', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' },
-  reminderItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#fffdf2', borderRadius: '10px', borderLeft: '4px solid #f1c40f', marginBottom: '8px', color: '#1a202c', fontSize: '14px' },
-  delBtn: { background: 'none', border: 'none', color: '#e74c3c', cursor: 'pointer' },
-  textBtn: { background: 'none', border: 'none', color: '#1e3a8a', fontWeight: 'bold', cursor: 'pointer' },
-  logCard: { display: 'flex', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '15px', overflow: 'hidden', marginBottom: '15px' },
-  logSide: { backgroundColor: '#f8fafc', width: '65px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#1e3a8a', fontSize: '12px', textAlign: 'center' },
-  logMain: { padding: '15px', flex: 1 },
-  logHeader: { display: 'flex', justifyContent: 'space-between' },
-  logSubject: { fontWeight: 'bold', color: '#1a202c' },
-  logTeacher: { fontSize: '12px', color: '#64748b' },
-  logNote: { fontSize: '13px', color: '#334155', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', borderLeft: '3px solid #1e3a8a', marginTop: '5px' },
-  empty: { textAlign: 'center', color: '#94a3b8', fontSize: '14px' },
-  searchInput: { width: '100%', padding: '12px 15px', borderRadius: '12px', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#1a202c', fontSize: '14px', outline: 'none', boxSizing: 'border-box' },
-  bypassBtn: { marginTop: '50px', background: 'none', border: '1px dashed #cbd5e1', color: '#cbd5e1', padding: '8px 15px', borderRadius: '8px', fontSize: '11px', cursor: 'pointer' },
-  notifyLink: { background: 'none', border: 'none', color: '#1e3a8a', fontSize: '12px', marginTop: '10px', cursor: 'pointer', textDecoration: 'underline' },
-  searchBoxContainer: { marginBottom: '20px' }
-};
-
-export default function App() {
+function App() {
   const [scanResult, setScanResult] = useState(null);
   const [view, setView] = useState("dashboard"); 
   const [greeting, setGreeting] = useState("");
@@ -68,7 +26,7 @@ export default function App() {
   });
   const [goalInput, setGoalInput] = useState("");
   const [goalType, setGoalType] = useState("daily");
-  const [goalTime, setGoalTime] = useState("");
+  const [goalTime, setGoalTime] = useState(""); // <--- NEW STATE ADDED
 
   const [note, setNote] = useState("");
   const [period, setPeriod] = useState("1");
@@ -131,6 +89,7 @@ export default function App() {
     }
   };
 
+  // --- NEW BACKGROUND REMINDER LOGIC ---
   const scheduleBackgroundReminder = (text, time) => {
     const [hours, minutes] = time.split(':');
     const target = new Date();
@@ -161,9 +120,14 @@ export default function App() {
     if (!goalInput.trim()) return;
     const newGoal = { id: Date.now(), text: goalInput, type: goalType, status: 'undone', time: goalTime };
     setGoals([...goals, newGoal]);
-    if (goalTime) scheduleBackgroundReminder(goalInput, goalTime);
+    
+    // Trigger the background timer if time is selected
+    if (goalTime) {
+      scheduleBackgroundReminder(goalInput, goalTime);
+    }
+
     setGoalInput("");
-    setGoalTime("");
+    setGoalTime(""); // Reset for next entry
   };
 
   const toggleGoal = (id) => {
@@ -233,7 +197,7 @@ export default function App() {
     return { subjectStats, teacherStats, searchResults };
   };
 
-  const { searchResults } = getAnalyticsAndSearch();
+  const { subjectStats, teacherStats, searchResults } = getAnalyticsAndSearch();
 
   const highlightText = (text, highlight) => {
     if (!highlight.trim()) return text;
@@ -293,10 +257,18 @@ export default function App() {
               <p style={styles.sectionLabel}>GOAL TRACKER</p>
               <div style={styles.formCard}>
                 <input style={styles.searchInput} placeholder="What is your goal?" value={goalInput} onChange={e => setGoalInput(e.target.value)} />
+                
+                {/* NEW TIME PICKER FIELD */}
                 <div style={{marginTop: '15px'}}>
                   <label style={styles.fieldLabel}>Reminder Time (Optional)</label>
-                  <input type="time" style={styles.select} value={goalTime} onChange={e => setGoalTime(e.target.value)} />
+                  <input 
+                    type="time" 
+                    style={styles.select} 
+                    value={goalTime} 
+                    onChange={e => setGoalTime(e.target.value)} 
+                  />
                 </div>
+
                 <div style={{display: 'flex', gap: '10px', marginTop: '10px'}}>
                   <select style={{...styles.select, flex: 1}} value={goalType} onChange={e => setGoalType(e.target.value)}>
                     <option value="daily">Daily</option>
@@ -386,3 +358,47 @@ export default function App() {
     </div>
   );
 }
+
+// ... styles object (unchanged)
+const styles = {
+  viewPort: { width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', backgroundColor: '#f0f4f8', position: 'fixed', top: 0, left: 0, fontFamily: 'Inter, sans-serif' },
+  container: { width: '100%', maxWidth: '420px', backgroundColor: '#fff', display: 'flex', flexDirection: 'column' },
+  scanIconContainer: { position: 'relative', width: '100px', height: '100px', backgroundColor: '#f1f5f9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '30px' },
+  pulseRing: { position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', animation: 'pulse 2s infinite' },
+  header: { padding: '40px 25px 30px 25px', backgroundColor: '#1e3a8a', color: '#fff', borderBottomLeftRadius: '35px', borderBottomRightRadius: '35px' },
+  topInfo: { textAlign: 'left' },
+  greetingText: { fontSize: '14px', opacity: 0.8, margin: 0 },
+  studentName: { fontSize: '28px', fontWeight: '800', margin: '5px 0 0 0' },
+  backIconBtn: { background: 'rgba(255,255,255,0.2)', border: 'none', padding: '10px', borderRadius: '12px', fontSize: '20px', cursor: 'pointer' },
+  dateSelectorPill: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: '50px', padding: '5px', marginTop: '20px' },
+  pillBtn: { background: 'none', border: 'none', color: '#fff', padding: '10px 20px', cursor: 'pointer' },
+  dateInfo: { display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, textAlign: 'center' }, 
+  pillLabel: { fontSize: '9px', fontWeight: 'bold', color: '#60a5fa' },
+  pillInput: { background: 'none', border: 'none', color: '#fff', fontWeight: 'bold', fontSize: '14px', textAlign: 'center', outline: 'none', width: '100%' },
+  scrollArea: { flex: 1, overflowY: 'auto', padding: '25px' },
+  section: { marginBottom: '35px' },
+  sectionLabel: { fontSize: '11px', fontWeight: 'bold', color: '#94a3b8', letterSpacing: '1px', marginBottom: '10px' },
+  formCard: { backgroundColor: '#f8fafc', padding: '20px', borderRadius: '20px', border: '1px solid #e2e8f0' },
+  fieldLabel: { fontSize: '11px', color: '#64748b', marginBottom: '5px', display: 'block' },
+  row: { display: 'flex', gap: '10px' },
+  select: { width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #cbd5e1', color: '#1a202c', backgroundColor: '#fff' },
+  textarea: { width: '100%', boxSizing: 'border-box', marginTop: '15px', padding: '14px', borderRadius: '10px', border: '1px solid #cbd5e1', color: '#1a202c', backgroundColor: '#fff', minHeight: '90px', fontFamily: 'inherit' },
+  mainBtn: { width: '100%', marginTop: '15px', padding: '16px', backgroundColor: '#1e3a8a', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' },
+  reminderItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#fffdf2', borderRadius: '10px', borderLeft: '4px solid #f1c40f', marginBottom: '8px', color: '#1a202c', fontSize: '14px' },
+  delBtn: { background: 'none', border: 'none', color: '#e74c3c', cursor: 'pointer' },
+  textBtn: { background: 'none', border: 'none', color: '#1e3a8a', fontWeight: 'bold', cursor: 'pointer' },
+  logCard: { display: 'flex', backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '15px', overflow: 'hidden', marginBottom: '15px' },
+  logSide: { backgroundColor: '#f8fafc', width: '65px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#1e3a8a', fontSize: '12px', textAlign: 'center' },
+  logMain: { padding: '15px', flex: 1 },
+  logHeader: { display: 'flex', justifyContent: 'space-between' },
+  logSubject: { fontWeight: 'bold', color: '#1a202c' },
+  logTeacher: { fontSize: '12px', color: '#64748b' },
+  logNote: { fontSize: '13px', color: '#334155', padding: '10px', backgroundColor: '#f8fafc', borderRadius: '8px', borderLeft: '3px solid #1e3a8a', marginTop: '5px' },
+  empty: { textAlign: 'center', color: '#94a3b8', fontSize: '14px' },
+  searchInput: { width: '100%', padding: '12px 15px', borderRadius: '12px', border: '1px solid #cbd5e1', backgroundColor: '#fff', color: '#1a202c', fontSize: '14px', outline: 'none', boxSizing: 'border-box' },
+  bypassBtn: { marginTop: '50px', background: 'none', border: '1px dashed #cbd5e1', color: '#cbd5e1', padding: '8px 15px', borderRadius: '8px', fontSize: '11px', cursor: 'pointer' },
+  notifyLink: { background: 'none', border: 'none', color: '#1e3a8a', fontSize: '12px', marginTop: '10px', cursor: 'pointer', textDecoration: 'underline' },
+  searchBoxContainer: { marginBottom: '20px' }
+};
+
+export default App;
