@@ -26,7 +26,6 @@ function App() {
   });
   const [goalInput, setGoalInput] = useState("");
   const [goalType, setGoalType] = useState("daily");
-  const [goalTime, setGoalTime] = useState(""); // <--- NEW STATE ADDED
 
   const [note, setNote] = useState("");
   const [period, setPeriod] = useState("1");
@@ -75,7 +74,7 @@ function App() {
           const registration = await navigator.serviceWorker.ready;
           registration.showNotification(title, {
             body: body,
-            icon: '/logo192.png',
+            icon: 'https://cdn-icons-png.flaticon.com/512/190/190411.png',
             vibrate: [200, 100, 200],
             tag: 'goal-alert'
           });
@@ -89,25 +88,6 @@ function App() {
     }
   };
 
-  // --- NEW BACKGROUND REMINDER LOGIC ---
-  const scheduleBackgroundReminder = (text, time) => {
-    const [hours, minutes] = time.split(':');
-    const target = new Date();
-    target.setHours(parseInt(hours), parseInt(minutes), 0);
-
-    let delay = target.getTime() - new Date().getTime();
-    if (delay < 0) delay += 24 * 60 * 60 * 1000;
-
-    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-      navigator.serviceWorker.controller.postMessage({
-        type: 'SET_REMINDER',
-        title: 'Goal Reminder',
-        body: `Time for: ${text}`,
-        delay: delay
-      });
-    }
-  };
-
   const requestNotify = () => {
     Notification.requestPermission().then(permission => {
       if (permission === 'granted') {
@@ -118,16 +98,9 @@ function App() {
 
   const addGoal = () => {
     if (!goalInput.trim()) return;
-    const newGoal = { id: Date.now(), text: goalInput, type: goalType, status: 'undone', time: goalTime };
+    const newGoal = { id: Date.now(), text: goalInput, type: goalType, status: 'undone' };
     setGoals([...goals, newGoal]);
-    
-    // Trigger the background timer if time is selected
-    if (goalTime) {
-      scheduleBackgroundReminder(goalInput, goalTime);
-    }
-
     setGoalInput("");
-    setGoalTime(""); // Reset for next entry
   };
 
   const toggleGoal = (id) => {
@@ -227,7 +200,32 @@ function App() {
       </div>
     );
   }
+// src/App.jsx (or Goal Component)
 
+const handleAddGoalWithReminder = (goalText, goalTime) => {
+  // 1. Calculate the millisecond delay
+  const [hours, minutes] = goalTime.split(':');
+  const target = new Date();
+  target.setHours(parseInt(hours), parseInt(minutes), 0);
+
+  let delay = target.getTime() - new Date().getTime();
+  
+  // If the time is earlier today, set it for tomorrow
+  if (delay < 0) delay += 24 * 60 * 60 * 1000;
+
+  // 2. This is the "Bridge" to the Service Worker
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({
+      type: 'SET_REMINDER',
+      title: 'Academic Goal Tracker',
+      body: `Reminder: ${goalText}`,
+      delay: delay
+    });
+    console.log("Reminder data sent to Service Worker");
+  } else {
+    console.error("Service Worker not active yet");
+  }
+};
   return (
     <div style={styles.viewPort}>
       <div style={styles.container}>
@@ -257,18 +255,6 @@ function App() {
               <p style={styles.sectionLabel}>GOAL TRACKER</p>
               <div style={styles.formCard}>
                 <input style={styles.searchInput} placeholder="What is your goal?" value={goalInput} onChange={e => setGoalInput(e.target.value)} />
-                
-                {/* NEW TIME PICKER FIELD */}
-                <div style={{marginTop: '15px'}}>
-                  <label style={styles.fieldLabel}>Reminder Time (Optional)</label>
-                  <input 
-                    type="time" 
-                    style={styles.select} 
-                    value={goalTime} 
-                    onChange={e => setGoalTime(e.target.value)} 
-                  />
-                </div>
-
                 <div style={{display: 'flex', gap: '10px', marginTop: '10px'}}>
                   <select style={{...styles.select, flex: 1}} value={goalType} onChange={e => setGoalType(e.target.value)}>
                     <option value="daily">Daily</option>
@@ -283,10 +269,7 @@ function App() {
                   <p style={styles.sectionLabel}>{type.toUpperCase()} GOALS</p>
                   {goals.filter(g => g.type === type).map(g => (
                     <div key={g.id} style={{...styles.reminderItem, backgroundColor: g.status === 'done' ? '#f0fdf4' : '#fffdf2', borderLeftColor: g.status === 'done' ? '#22c55e' : '#f1c40f'}}>
-                      <div style={{display: 'flex', flexDirection: 'column', flex: 1}}>
-                        <span style={{textDecoration: g.status === 'done' ? 'line-through' : 'none'}}>{g.status === 'done' ? '✅' : '⏳'} {g.text}</span>
-                        {g.time && <span style={{fontSize: '10px', color: '#64748b'}}>⏰ Reminder set for {g.time}</span>}
-                      </div>
+                      <span style={{textDecoration: g.status === 'done' ? 'line-through' : 'none', flex: 1}}>{g.status === 'done' ? '✅' : '⏳'} {g.text}</span>
                       <div style={{display: 'flex', gap: '10px'}}>
                         <button style={styles.textBtn} onClick={() => toggleGoal(g.id)}>{g.status === 'done' ? 'Undo' : 'Done'}</button>
                         <button style={styles.delBtn} onClick={() => setGoals(goals.filter(item => item.id !== g.id))}>✕</button>
@@ -298,6 +281,7 @@ function App() {
             </section>
           )}
           
+
           {view === 'dashboard' && (
             <>
               {isToday && (
@@ -359,7 +343,6 @@ function App() {
   );
 }
 
-// ... styles object (unchanged)
 const styles = {
   viewPort: { width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', backgroundColor: '#f0f4f8', position: 'fixed', top: 0, left: 0, fontFamily: 'Inter, sans-serif' },
   container: { width: '100%', maxWidth: '420px', backgroundColor: '#fff', display: 'flex', flexDirection: 'column' },
