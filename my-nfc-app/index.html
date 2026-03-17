@@ -4,20 +4,29 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>my-nfc-app</title>
-    <link rel="manifest" href="./manifest.json" />
+    <title>NFC Academic Tracker</title>
+    
+    <link rel="manifest" href="/manifest.json" />
+    
+    <meta name="theme-color" content="#1e3a8a" />
   </head>
   <body>
     <div id="root"></div>
+    
     <script type="module" src="/src/main.jsx"></script>
+    
     <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./service-worker.js')
-        .then(reg => console.log('Service Worker registered!', reg))
-        .catch(err => console.log('Service Worker failed:', err));
-    });
-  }
-</script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => {
+              console.log('Service Worker registered successfully!', reg.scope);
+            })
+            .catch(err => {
+              console.log('Service Worker registration failed:', err);
+            });
+        });
+      }
+    </script>
   </body>
 </html>
